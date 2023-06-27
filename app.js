@@ -16,8 +16,7 @@ app.use(express.static("public"));
 
 
 //CONNECT TO MongoDB 
-
-const uri = "mongodb+srv://nateewing93:Travelin.20@cluster0.cxhnnxh.mongodb.net/?retryWrites=true&w=majority";
+const uri = "mongodb+srv://nateewing93:Travelin.20@cluster0.cxhnnxh.mongodb.net/wikiDB?retryWrites=true&w=majority";
 
 async function connect() {
   try {
@@ -29,7 +28,35 @@ async function connect() {
 }
 connect();
 
-//TODO
+
+//Defining schema for the datebase collection "posts"...
+const articleSchema = new mongoose.Schema ({
+  title: String,
+  content: String
+})
+
+const Article = mongoose.model('Article', articleSchema,)
+
+
+
+//GET MANAGMENT
+
+app.get('/articles', (req, res) => {
+
+  Article.find({})
+  .then ((foundArticles) =>{
+   console.log(foundArticles);
+   res.send(foundArticles)
+  })
+
+  .catch((error) => {
+    console.error('Error Finding items:', error);
+    res.status(500).send(error);
+  });
+  });
+
+
+
 
 app.listen(3000, function() {
   console.log("Server started on port 3000");
