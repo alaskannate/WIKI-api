@@ -30,34 +30,59 @@ connect();
 
 
 //Defining schema for the datebase collection "posts"...
-const articleSchema = new mongoose.Schema ({
+const articleSchema = new mongoose.Schema({
   title: String,
   content: String
 })
 
-const Article = mongoose.model('Article', articleSchema,)
+const Article = mongoose.model('Article', articleSchema, )
 
-
-
-//GET MANAGMENT
 
 app.get('/articles', (req, res) => {
-
   Article.find({})
-  .then ((foundArticles) =>{
-   console.log(foundArticles);
-   res.send(foundArticles)
-  })
+    .then((foundArticles) => {
+      if (foundArticles.length === 0) {
+        return res.send("No articles found.");
+      } else {
+        console.log(foundArticles);
+        res.send(foundArticles);
+      }
 
+    })
+    .catch((error) => {
+      console.error('Error finding articles:', error);
+      res.status(500).send(error);
+    });
+});
+
+app.post('/articles', (req, res) => {
+
+  const newArticle = new Article({
+    title: req.body.title,
+    content: req.body.content
+  })
+  newArticle.save()
+    .then(() => {
+      console.log( req.body.title +  " saved to database.");
+    })
+    .catch((error) => {
+      console.error('Error Posting items:', error);
+      res.status(500).send(error);
+    });
+});
+
+app.delete('/articles', (req, res) => {
+
+  Article.deleteMany({})
+  .then(() => {
+    res.send("All articles deleted.")
+  })
   .catch((error) => {
-    console.error('Error Finding items:', error);
+    console.error('Error Deleting items:', error);
     res.status(500).send(error);
   });
-  });
+})
 
-
-
-
-app.listen(3000, function() {
+app.listen(3000, function () {
   console.log("Server started on port 3000");
 });
