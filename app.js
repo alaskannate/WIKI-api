@@ -38,50 +38,127 @@ const articleSchema = new mongoose.Schema({
 const Article = mongoose.model('Article', articleSchema, )
 
 
-app.get('/articles', (req, res) => {
-  Article.find({})
-    .then((foundArticles) => {
-      if (foundArticles.length === 0) {
-        return res.send("No articles found.");
-      } else {
-        console.log(foundArticles);
-        res.send(foundArticles);
-      }
 
-    })
-    .catch((error) => {
-      console.error('Error finding articles:', error);
-      res.status(500).send(error);
-    });
-});
+app.route('/articles')
 
-app.post('/articles', (req, res) => {
+  .get((req, res) => {
+    Article.find({})
+      .then((foundArticles) => {
+        if (foundArticles.length === 0) {
+          return res.send("No articles found.");
+        } else {
+          console.log(foundArticles);
+          res.send(foundArticles);
+        }
 
-  const newArticle = new Article({
-    title: req.body.title,
-    content: req.body.content
+      })
+      .catch((error) => {
+        console.error('Error finding articles:', error);
+        res.status(500).send(error);
+      });
   })
-  newArticle.save()
-    .then(() => {
-      console.log( req.body.title +  " saved to database.");
+
+  .post((req, res) => {
+
+    const newArticle = new Article({
+      title: req.body.title,
+      content: req.body.content
     })
-    .catch((error) => {
-      console.error('Error Posting items:', error);
-      res.status(500).send(error);
-    });
-});
+    newArticle.save()
+      .then(() => {
+        console.log(req.body.title + " saved to database.");
+        res.send('New article saved.')
+      })
+      .catch((error) => {
+        console.error('Error Posting items:', error);
+        res.status(500).send(error);
+      });
+  })
 
-app.delete('/articles', (req, res) => {
+  .delete((req, res) => {
 
-  Article.deleteMany({})
+    Article.deleteMany({})
+      .then(() => {
+        res.send("All articles deleted.")
+      })
+      .catch((error) => {
+        console.error('Error Deleting items:', error);
+        res.status(500).send(error);
+      });
+  });
+
+app.route('/articles/:articleTitle')
+
+  .get((req, res) => {
+    Article.findOne({
+        title: req.params.articleTitle
+      })
+      .then((foundArticle) => {
+        console.log(foundArticle);
+        res.send(foundArticle);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+
+  })
+
+  .put((req, res) => {
+
+    const searchedTitle = req.params.articleTitle;
+
+    Article.replaceOne({
+
+      title: searchedTitle
+    }, {
+      title: req.body.title,
+      content: req.body.content
+    }, {
+      overwrite: true
+    }).then(updatedArticle => {
+      res.send(updatedArticle);
+      console.log(searchedTitle + " has changed to " + req.body.title)
+    }).catch(err => {
+      console.log(err);
+    })
+
+  })
+
+  .patch((req, res) => {
+
+    const searchedTitle = req.params.articleTitle;
+
+    Article.replaceOne({
+        title: searchedTitle
+      }, {
+        $set: req.body
+      })
+      .then(updatedArticle => {
+        res.send(updatedArticle);
+        console.log(searchedTitle + " has changed to " + req.body.title)
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: 'An error occurred'
+
+        });
+      });
+  })
+
+.delete((req, res) => {
+  Article.deleteOne({})
   .then(() => {
-    res.send("All articles deleted.")
+    res.send("One article deleted.")
   })
   .catch((error) => {
     console.error('Error Deleting items:', error);
     res.status(500).send(error);
   });
-})
+});
+
+
+
 
 app.listen(3000, function () {
   console.log("Server started on port 3000");
